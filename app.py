@@ -242,7 +242,7 @@ def geocodificar_cidade_gratis(cidade, estado):
         return -15.7939, -47.8828
 
 
-def buscar_leads_overpass_api(cidade, estado, raio_km, nicho, tags_custom=None):
+def buscar_leads_overpass_api(cidade, estado, max_leads, nicho, tags_custom=None):
     """Busca estabelecimentos via Overpass API"""
     try:
         lat, lon = geocodificar_cidade_gratis(cidade, estado)
@@ -255,11 +255,14 @@ def buscar_leads_overpass_api(cidade, estado, raio_km, nicho, tags_custom=None):
         if not tags:
             tags = ["shop"]
         
+        # Raio adaptativo baseado na quantidade
+        raio_metros = 20000  # 20km como base
+        
         query = f"[out:json][timeout:30];("
         for tag in tags:
             key, value = tag.split("=")
-            query += f'node["{key}"="{value}"](around:{raio_km * 1000},{lat},{lon});'
-            query += f'way["{key}"="{value}"](around:{raio_km * 1000},{lat},{lon});'
+            query += f'node["{key}"="{value}"](around:{raio_metros},{lat},{lon});'
+            query += f'way["{key}"="{value}"](around:{raio_metros},{lat},{lon});'
         query += ");out center;"
         
         url = "https://overpass-api.de/api/interpreter"
@@ -269,8 +272,11 @@ def buscar_leads_overpass_api(cidade, estado, raio_km, nicho, tags_custom=None):
             response = requests.post(url, data={"data": query}, timeout=40)
             data = response.json()
         
+        # Limita aos primeiros max_leads resultados
+        elements = data.get("elements", [])[:max_leads]
+        
         leads = []
-        for i, element in enumerate(data.get("elements", [])[:30], 1):
+        for i, element in enumerate(elements, 1):
             tags = element.get("tags", {})
             
             if "center" in element:
@@ -368,7 +374,7 @@ with st.sidebar:
     cidades = buscar_cidades_por_estado(uf)
     cidade_sel = st.selectbox("Cidade", cidades, index=0)
     
-    raio = st.slider("Raio (km)", 5, 100, 20, 5)
+    max_leads = st.slider("Quantidade de leads", 5, 50, 20, 5)
     
     st.markdown("---")
     
@@ -399,7 +405,7 @@ if buscar_btn:
     else:
         tags_busca = obter_tags_osm_nicho(nicho_sel)
     
-    st.session_state.df_leads = buscar_leads_overpass_api(cidade_sel, uf, raio, nicho_sel, tags_busca)
+    st.session_state.df_leads = buscar_leads_overpass_api(cidade_sel, uf, max_leads, nicho_sel, tags_busca)
     
     if not st.session_state.df_leads.empty:
         st.success(f"✅ {len(st.session_state.df_leads)} leads encontrados!")
