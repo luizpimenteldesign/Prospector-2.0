@@ -30,102 +30,7 @@ st.markdown("""
         background-color: #2d2d2d;
     }
     
-    [data-testid="stSidebar"] * {
-        color: #ffffff !important;
-    }
-    
-    /* Cards de Leads */
-    .lead-card {
-        background: linear-gradient(135deg, #2d2d2d 0%, #1f1f1f 100%);
-        border: 1px solid #404040;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 15px 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .lead-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
-        border-color: #ff6b35;
-    }
-    
-    .lead-name {
-        color: #ffffff;
-        font-size: 20px;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-    
-    .lead-category {
-        color: #ff6b35;
-        font-size: 14px;
-        margin-bottom: 5px;
-    }
-    
-    .lead-info {
-        color: #b0b0b0;
-        font-size: 13px;
-        margin: 5px 0;
-    }
-    
-    .lead-rate {
-        background: linear-gradient(90deg, #ff6b35, #ff8c42);
-        color: white;
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 12px;
-        display: inline-block;
-        margin: 5px 0;
-    }
-    
-    .lead-rate-high {
-        background: linear-gradient(90deg, #00c853, #00e676);
-    }
-    
-    .lead-rate-medium {
-        background: linear-gradient(90deg, #ffa726, #ffb74d);
-    }
-    
-    .lead-rate-low {
-        background: linear-gradient(90deg, #ef5350, #e57373);
-    }
-    
-    /* Redes sociais */
-    .social-icons {
-        display: flex;
-        gap: 10px;
-        margin: 10px 0;
-    }
-    
-    .social-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #404040;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.3s;
-    }
-    
-    .social-icon:hover {
-        background: #ff6b35;
-    }
-    
-    /* Títulos */
-    .section-title {
-        color: #ff6b35;
-        font-size: 24px;
-        font-weight: 700;
-        margin: 20px 0 15px 0;
-        border-left: 4px solid #ff6b35;
-        padding-left: 15px;
-    }
-    
-    /* Botões personalizados */
+    /* Botões */
     .stButton > button {
         background: linear-gradient(90deg, #ff6b35, #ff8c42);
         color: white;
@@ -133,7 +38,6 @@ st.markdown("""
         border-radius: 8px;
         padding: 10px 24px;
         font-weight: 600;
-        transition: all 0.3s;
     }
     
     .stButton > button:hover {
@@ -141,54 +45,23 @@ st.markdown("""
         box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
     }
     
-    /* Selectbox e inputs */
-    .stSelectbox, .stTextInput {
+    /* Containers */
+    .stContainer {
         background-color: #2d2d2d;
-    }
-    
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-        background-color: #2d2d2d;
-        padding: 10px;
-        border-radius: 8px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        color: #b0b0b0;
-        font-weight: 600;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        color: #ff6b35;
-        border-bottom-color: #ff6b35;
-    }
-    
-    /* Logo */
-    .logo-container {
-        padding: 20px 0;
-        text-align: center;
-    }
-    
-    /* Stats cards */
-    .stat-card {
-        background: #2d2d2d;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
+        border-radius: 12px;
+        padding: 20px;
         border: 1px solid #404040;
     }
     
-    .stat-number {
-        font-size: 32px;
-        font-weight: 700;
-        color: #ff6b35;
+    /* Expander */
+    .streamlit-expanderHeader {
+        background-color: #2d2d2d;
+        border-radius: 8px;
     }
     
-    .stat-label {
-        font-size: 14px;
-        color: #b0b0b0;
-        margin-top: 5px;
+    /* Metrics */
+    [data-testid="stMetricValue"] {
+        color: #ff6b35;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -202,6 +75,94 @@ st.logo(
 
 
 # ========== FUNÇÕES DE BUSCA (início) ==========
+def buscar_logo_site(url):
+    """Tenta buscar o favicon/logo do site"""
+    if not url:
+        return None
+    try:
+        # Adiciona https:// se não tiver
+        if not url.startswith('http'):
+            url = 'https://' + url
+        
+        # Tenta buscar favicon
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        domain = parsed.netloc or parsed.path
+        
+        # Opções de favicon
+        favicon_urls = [
+            f"https://www.google.com/s2/favicons?domain={domain}&sz=128",
+            f"{url}/favicon.ico",
+            f"https://{domain}/favicon.ico"
+        ]
+        
+        return favicon_urls[0]  # Google sempre funciona
+    except:
+        return None
+
+
+def analisar_site(url):
+    """Analisa qualidade básica do site"""
+    if not url:
+        return {
+            "tem_https": False,
+            "responde": False,
+            "tempo_resposta": 0,
+            "status_code": 0,
+            "tem_mobile": False,
+            "score_seo": 0
+        }
+    
+    try:
+        if not url.startswith('http'):
+            url = 'https://' + url
+        
+        import time
+        start = time.time()
+        response = requests.get(url, timeout=5, allow_redirects=True)
+        tempo = time.time() - start
+        
+        analise = {
+            "tem_https": url.startswith('https'),
+            "responde": response.status_code == 200,
+            "tempo_resposta": round(tempo, 2),
+            "status_code": response.status_code,
+            "tem_mobile": 'viewport' in response.text.lower(),
+            "score_seo": 0
+        }
+        
+        # Score básico de SEO
+        score = 0
+        if analise["tem_https"]: score += 20
+        if analise["responde"]: score += 30
+        if analise["tempo_resposta"] < 3: score += 20
+        if analise["tem_mobile"]: score += 30
+        analise["score_seo"] = score
+        
+        return analise
+    except:
+        return {
+            "tem_https": False,
+            "responde": False,
+            "tempo_resposta": 0,
+            "status_code": 0,
+            "tem_mobile": False,
+            "score_seo": 0
+        }
+
+
+def buscar_redes_sociais(nome_empresa, cidade):
+    """Busca redes sociais via Google Search (simplificado)"""
+    # Por enquanto retorna apenas as que vêm do OSM
+    # Poderia ser expandido com scraping do Google
+    return {
+        "facebook": "",
+        "instagram": "",
+        "linkedin": "",
+        "twitter": ""
+    }
+
+
 def buscar_oportunidades_google_trends(palavras_chave, regiao="BR"):
     """Busca tendências usando pytrends"""
     try:
@@ -302,11 +263,15 @@ def calcular_rate_lead(lead_data):
         return "Baixa", "lead-rate-low"
 
 
-def buscar_leads_overpass_api(cidade, estado, raio_km, nicho):
+def buscar_leads_overpass_api(cidade, estado, raio_km, nicho, tags_custom=None):
     """Busca estabelecimentos usando Overpass API"""
     try:
         lat, lon = geocodificar_cidade_gratis(cidade, estado)
-        tags = obter_tags_osm_nicho(nicho)
+        
+        if tags_custom:
+            tags = tags_custom
+        else:
+            tags = obter_tags_osm_nicho(nicho)
         
         if not tags:
             tags = ["shop"]
@@ -418,17 +383,14 @@ def df_para_csv(df, ids_selecionados):
 
 # ========== SIDEBAR (início) ==========
 with st.sidebar:
-    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
     st.markdown("### 🧭 Agente de Prospecção")
     st.caption("Busca por nichos e localidades com oportunidades reais")
-    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Oportunidades Reais
-    st.markdown('<p class="section-title" style="font-size: 16px; margin: 10px 0;">📊 Oportunidades Reais</p>', unsafe_allow_html=True)
-    st.caption("Resultados do Google Trends relacionados aos serviços da LP Design")
-    st.caption("Quais serviços foram mais buscados em determinada localidade")
+    st.markdown("**📊 Oportunidades Reais**")
+    st.caption("Resultados do Google Trends")
     
     st.markdown("---")
     
@@ -467,7 +429,7 @@ with st.sidebar:
     # Filtros de Nicho
     st.markdown("#### 🎯 Nichos")
     
-    nichos_disponiveis = ["Todos"] + obter_todos_nichos()
+    nichos_disponiveis = obter_todos_nichos()
     nicho_selecionado = st.selectbox(
         "Nicho principal",
         nichos_disponiveis,
@@ -475,12 +437,12 @@ with st.sidebar:
     )
     
     # Categorias específicas do nicho
-    if nicho_selecionado != "Todos":
-        categorias = obter_categorias_nicho(nicho_selecionado)
-        if categorias:
-            with st.expander("📋 Ver categorias deste nicho"):
-                for cat in categorias:
-                    st.caption(f"• {cat}")
+    categorias = obter_categorias_nicho(nicho_selecionado)
+    categoria_selecionada = st.selectbox(
+        "Categoria específica",
+        ["Todas"] + categorias,
+        index=0
+    )
     
     st.markdown("---")
     
@@ -517,16 +479,25 @@ if buscar_opp:
         st.success(f"✅ {len(st.session_state.df_oportunidades)} oportunidades encontradas!")
 
 if buscar_leads:
-    if nicho_selecionado == "Todos":
-        st.warning("⚠️ Selecione um nicho específico para buscar leads")
-    elif cidade_selecionada == "Todas":
+    if cidade_selecionada == "Todas":
         st.warning("⚠️ Selecione uma cidade específica para buscar leads")
     else:
+        # Determinar qual tag buscar
+        if categoria_selecionada != "Todas":
+            # Buscar apenas a categoria específica
+            tags_busca = [tag for tag in obter_tags_osm_nicho(nicho_selecionado) 
+                         if categoria_selecionada.lower() in tag.lower()]
+            if not tags_busca:
+                tags_busca = obter_tags_osm_nicho(nicho_selecionado)
+        else:
+            tags_busca = obter_tags_osm_nicho(nicho_selecionado)
+        
         st.session_state.df_leads = buscar_leads_overpass_api(
             cidade_selecionada,
             uf,
             raio_km,
-            nicho_selecionado
+            nicho_selecionado,
+            tags_busca
         )
         if not st.session_state.df_leads.empty:
             st.success(f"✅ {len(st.session_state.df_leads)} leads encontrados!")
@@ -537,47 +508,26 @@ df_leads = st.session_state.df_leads.copy()
 
 
 # ========== HEADER (início) ==========
-st.markdown('<h1 style="color: #ff6b35; font-size: 36px;">🧭 Agente de Prospecção LP Design</h1>', unsafe_allow_html=True)
-st.markdown('<p style="color: #b0b0b0; font-size: 16px;">Ferramenta completa e gratuita para prospecção de clientes</p>', unsafe_allow_html=True)
+st.title("🧭 Agente de Prospecção LP Design")
+st.caption("Ferramenta completa e gratuita para prospecção de clientes")
 
 # Stats
 if not df_leads.empty:
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">{len(df_leads)}</div>
-            <div class="stat-label">Leads Encontrados</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("Leads Encontrados", len(df_leads))
     
     with col2:
-        selecionados = len(st.session_state.selecionados)
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">{selecionados}</div>
-            <div class="stat-label">Selecionados</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("Selecionados", len(st.session_state.selecionados))
     
     with col3:
         com_site = len(df_leads[df_leads["tem_site"] == True])
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">{com_site}</div>
-            <div class="stat-label">Com Site</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("Com Site", com_site)
     
     with col4:
         com_redes = len(df_leads[df_leads["tem_redes"] == True])
-        st.markdown(f"""
-        <div class="stat-card">
-            <div class="stat-number">{com_redes}</div>
-            <div class="stat-label">Com Redes Sociais</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric("Com Redes Sociais", com_redes)
 
 st.markdown("---")
 
@@ -587,22 +537,27 @@ tab_opp, tab_leads = st.tabs(["📊 Oportunidades", "🧲 Leads"])
 
 # ========== ABA OPORTUNIDADES (início) ==========
 with tab_opp:
-    st.markdown('<p class="section-title">📊 Oportunidades de Mercado</p>', unsafe_allow_html=True)
+    st.markdown("## 📊 Oportunidades de Mercado")
 
     if st.session_state.df_oportunidades.empty:
-        st.info("👆 Clique em **'Buscar Oportunidades'** na barra lateral para carregar dados do Google Trends")
+        st.info("👆 Clique em **'Buscar Oportunidades'** na barra lateral")
     else:
         df_opp = st.session_state.df_oportunidades
         
         for _, row in df_opp.iterrows():
-            st.markdown(f"""
-            <div class="lead-card">
-                <div class="lead-name">🔍 {row['palavra_chave']}</div>
-                <div class="lead-info">📈 Volume estimado: <strong>{row['buscas']:,}</strong> buscas</div>
-                <div class="lead-info">📅 Período: {row['periodo']}</div>
-                <div class="lead-info">📍 Top cidades: {row['localidades_top']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            with st.container():
+                st.markdown(f"### 🔍 {row['palavra_chave']}")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Volume Estimado", f"{row['buscas']:,}")
+                with col2:
+                    st.metric("Período", row['periodo'])
+                with col3:
+                    st.caption("**Top Cidades:**")
+                    st.caption(row['localidades_top'])
+                
+                st.markdown("---")
         
         # Download
         if not df_opp.empty:
@@ -620,7 +575,7 @@ with tab_opp:
 
 # ========== ABA LEADS (início) ==========
 with tab_leads:
-    st.markdown('<p class="section-title">🧲 Leads Prospectados</p>', unsafe_allow_html=True)
+    st.markdown("## 🧲 Leads Prospectados")
 
     if df_leads.empty:
         st.info("👆 Clique em **'Buscar Leads'** na barra lateral para carregar estabelecimentos")
@@ -648,57 +603,190 @@ with tab_leads:
         # EXIBIÇÃO EM CARDS
         if modo == "Cards":
             for _, row in df_leads.iterrows():
-                # Card HTML
-                redes_html = ""
-                if row.get("facebook"):
-                    redes_html += f'<a href="{row["facebook"]}" target="_blank"><div class="social-icon">📘</div></a>'
-                if row.get("instagram"):
-                    redes_html += f'<a href="{row["instagram"]}" target="_blank"><div class="social-icon">📷</div></a>'
-                
-                site_html = f'<div class="lead-info">🌐 <a href="{row["site"]}" target="_blank" style="color: #ff6b35;">Site</a></div>' if row.get("site") else '<div class="lead-info">🌐 Sem site</div>'
-                
-                st.markdown(f"""
-                <div class="lead-card">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;">
-                            <div class="lead-name">{row['empresa']}</div>
-                            <div class="lead-category">{row['nicho_geral']} • {row['nicho_especifico']}</div>
-                            <div class="lead-rate {row['rate_class']}">Rate: {row['rate']}</div>
-                        </div>
-                        <div style="width: 80px; height: 80px; background: #404040; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 40px;">
-                            🏢
-                        </div>
-                    </div>
+                with st.container():
+                    # Buscar logo se tiver site
+                    logo_url = buscar_logo_site(row.get("site", ""))
                     
-                    <div style="margin-top: 15px;">
-                        <div class="social-icons">{redes_html}</div>
-                        {site_html}
-                        <div class="lead-info">📍 {row['endereco']}</div>
-                        {f'<div class="lead-info">📞 {row["telefone_bruto"]}</div>' if row.get("telefone_bruto") else ''}
-                        {f'<div class="lead-info">🕐 {row["horario"]}</div>' if row.get("horario") else ''}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Controles interativos (checkbox e WhatsApp)
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    marcado = row["id"] in st.session_state.selecionados
-                    novo = st.checkbox(
-                        "✓ Selecionar Lead",
-                        key=f"sel_card_{row['id']}",
-                        value=marcado
-                    )
-                    if novo:
-                        st.session_state.selecionados.add(row["id"])
-                    else:
-                        st.session_state.selecionados.discard(row["id"])
-                
-                with col2:
-                    msg = f"Olá! Sou da LP Design. Gostaria de conversar sobre melhorar a presença digital de {row['empresa']}."
-                    link = montar_link_whatsapp(row["whatsapp"], msg)
-                    if link:
-                        st.link_button("💬 WhatsApp", link, type="primary")
+                    col1, col2 = st.columns([1, 4])
+                    
+                    # Logo
+                    with col1:
+                        if logo_url:
+                            st.image(logo_url, width=80)
+                        else:
+                            st.markdown("### 🏢")
+                    
+                    # Informações principais
+                    with col2:
+                        st.markdown(f"### {row['empresa']}")
+                        st.caption(f"{row['nicho_geral']} • {row['nicho_especifico']}")
+                        
+                        # Rate
+                        rate_color = {"lead-rate-high": "🟢", "lead-rate-medium": "🟡", "lead-rate-low": "🔴"}
+                        st.markdown(f"{rate_color.get(row['rate_class'], '⚪')} **Rate: {row['rate']}**")
+                    
+                    st.markdown("---")
+                    
+                    # Detalhes
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**📍 Localização**")
+                        st.caption(row['endereco'])
+                        
+                        if row.get("telefone_bruto"):
+                            st.markdown(f"**📞 Telefone**")
+                            st.caption(row["telefone_bruto"])
+                        
+                        if row.get("email"):
+                            st.markdown(f"**📧 Email**")
+                            st.caption(row["email"])
+                    
+                    with col2:
+                        st.markdown("**🌐 Presença Digital**")
+                        
+                        if row.get("site"):
+                            st.markdown(f"[🔗 Site]({row['site']})")
+                            
+                            # Análise de site
+                            with st.expander("📊 Análise do Site"):
+                                analise = analisar_site(row['site'])
+                                
+                                col_a, col_b = st.columns(2)
+                                with col_a:
+                                    st.metric("HTTPS", "✅" if analise["tem_https"] else "❌")
+                                    st.metric("Mobile", "✅" if analise["tem_mobile"] else "❌")
+                                with col_b:
+                                    st.metric("Tempo", f"{analise['tempo_resposta']}s")
+                                    st.metric("SEO Score", f"{analise['score_seo']}/100")
+                        else:
+                            st.caption("Sem site")
+                        
+                        # Redes sociais
+                        if row.get("facebook") or row.get("instagram"):
+                            st.markdown("**📱 Redes Sociais**")
+                            if row.get("facebook"):
+                                st.markdown(f"[📘 Facebook]({row['facebook']})")
+                            if row.get("instagram"):
+                                st.markdown(f"[📷 Instagram]({row['instagram']})")
+                    
+                    # Ações
+                    col1, col2, col3 = st.columns([2, 2, 1])
+                    
+                    with col1:
+                        marcado = row["id"] in st.session_state.selecionados
+                        novo = st.checkbox(
+                            "✓ Selecionar Lead",
+                            key=f"sel_card_{row['id']}",
+                            value=marcado
+                        )
+                        if novo:
+                            st.session_state.selecionados.add(row["id"])
+                        else:
+                            st.session_state.selecionados.discard(row["id"])
+                    
+                    with col2:
+                        msg = f"Olá! Sou da LP Design. Gostaria de conversar sobre melhorar a presença digital de {row['empresa']}."
+                        link = montar_link_whatsapp(row["whatsapp"], msg)
+                        if link:
+                            st.link_button("💬 WhatsApp", link, type="primary", use_container_width=True)
+                    
+                    with col3:
+                        # Botão de relatório
+                        if st.button("📄", key=f"rel_{row['id']}", help="Ver Relatório Completo"):
+                            st.session_state[f"show_report_{row['id']}"] = True
+                    
+                    # Relatório detalhado (se solicitado)
+                    if st.session_state.get(f"show_report_{row['id']}", False):
+                        with st.expander("📋 Relatório Completo de Comunicação", expanded=True):
+                            st.markdown("### Análise de Presença Digital")
+                            
+                            # Site
+                            st.markdown("#### 🌐 Website")
+                            if row.get("site"):
+                                analise = analisar_site(row['site'])
+                                
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.metric("Status", "Online" if analise["responde"] else "Offline")
+                                    st.metric("HTTPS", "Sim" if analise["tem_https"] else "Não")
+                                with col2:
+                                    st.metric("Tempo Resposta", f"{analise['tempo_resposta']}s")
+                                    st.metric("Mobile-Friendly", "Sim" if analise["tem_mobile"] else "Não")
+                                with col3:
+                                    st.metric("Score SEO", f"{analise['score_seo']}/100")
+                                
+                                # Recomendações
+                                st.markdown("**Recomendações:**")
+                                if not analise["tem_https"]:
+                                    st.warning("⚠️ Site não usa HTTPS - recomendável para segurança")
+                                if analise["tempo_resposta"] > 3:
+                                    st.warning("⚠️ Site lento - otimizar performance")
+                                if not analise["tem_mobile"]:
+                                    st.warning("⚠️ Site não responsivo - implementar design mobile")
+                                if analise["score_seo"] < 50:
+                                    st.error("❌ SEO precisa de melhorias significativas")
+                                elif analise["score_seo"] < 80:
+                                    st.info("ℹ️ SEO pode ser otimizado")
+                                else:
+                                    st.success("✅ SEO em bom estado")
+                            else:
+                                st.warning("Empresa não possui website - **Oportunidade de venda!**")
+                            
+                            # Redes Sociais
+                            st.markdown("#### 📱 Redes Sociais")
+                            redes_encontradas = []
+                            
+                            if row.get("facebook"):
+                                redes_encontradas.append(f"[Facebook]({row['facebook']})")
+                            if row.get("instagram"):
+                                redes_encontradas.append(f"[Instagram]({row['instagram']})")
+                            if row.get("linkedin"):
+                                redes_encontradas.append(f"[LinkedIn]({row['linkedin']})")
+                            
+                            if redes_encontradas:
+                                st.markdown(" • ".join(redes_encontradas))
+                            else:
+                                st.warning("Sem redes sociais cadastradas - **Oportunidade de venda!**")
+                            
+                            # Contato
+                            st.markdown("#### 📞 Informações de Contato")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.markdown(f"**Telefone:** {row.get('telefone_bruto', 'Não informado')}")
+                                st.markdown(f"**Email:** {row.get('email', 'Não informado')}")
+                            with col2:
+                                st.markdown(f"**Endereço:** {row['endereco']}")
+                                st.markdown(f"**Horário:** {row.get('horario', 'Não informado')}")
+                            
+                            # Score final e oportunidades
+                            st.markdown("#### 💼 Oportunidades de Venda")
+                            oportunidades = []
+                            
+                            if not row.get("site"):
+                                oportunidades.append("🌐 Criação de website profissional")
+                            elif row.get("site"):
+                                analise = analisar_site(row['site'])
+                                if analise["score_seo"] < 70:
+                                    oportunidades.append("📈 Otimização de SEO")
+                                if analise["tempo_resposta"] > 3:
+                                    oportunidades.append("⚡ Melhoria de performance")
+                                if not analise["tem_mobile"]:
+                                    oportunidades.append("📱 Design responsivo/mobile")
+                            
+                            if not row.get("facebook") and not row.get("instagram"):
+                                oportunidades.append("📱 Gestão de redes sociais")
+                            
+                            if not row.get("email") or not "@" in row.get("email", ""):
+                                oportunidades.append("📧 Email marketing profissional")
+                            
+                            oportunidades.append("🎨 Identidade visual / Logo")
+                            oportunidades.append("📊 Marketing digital")
+                            
+                            for oport in oportunidades:
+                                st.markdown(f"• {oport}")
+                    
+                    st.markdown("---")
 
         # EXIBIÇÃO EM LISTA
         else:
