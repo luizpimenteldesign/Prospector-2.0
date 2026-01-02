@@ -421,53 +421,107 @@ with tab_results:
         df = df.sort_values("score", ascending=False)
         
         if modo == "Cards":
-            # MODO CARDS
+            # MODO CARDS (3 colunas)
             for _, row in df.iterrows():
                 lead_key = row["key"]
                 
                 with st.container(border=True):
-                    col1, col2, col3 = st.columns([1, 3, 2])
+                    col1, col2, col3 = st.columns([4, 3, 3])
                     
-                    # Logo
+                    # === COLUNA 1: INFO PRINCIPAL ===
                     with col1:
-                        logo_url = buscar_logo_site(row.get("site"))
-                        if logo_url:
-                            st.image(logo_url, width=80)
-                        else:
-                            st.markdown("## 🏢")
-                    
-                    # Info principal
-                    with col2:
-                        st.markdown(f"### {row['empresa']}")
-                        st.caption(f"📍 {row['endereco']}")
+                        # Logo + Nome
+                        subcol_logo, subcol_nome = st.columns([1, 4])
+                        with subcol_logo:
+                            logo_url = buscar_logo_site(row.get("site"))
+                            if logo_url:
+                                st.image(logo_url, width=60)
+                            else:
+                                st.markdown("### 🏢")
+                        
+                        with subcol_nome:
+                            st.markdown(f"### {row['empresa']}")
+                            st.caption(f"📍 {row['endereco']}")
+                        
+                        # Contatos
                         if row.get("telefone"):
                             st.caption(f"📞 {row['telefone']}")
+                        if row.get("whatsapp"):
+                            st.caption(f"💬 WhatsApp: {row['whatsapp']}")
+                        
+                        # Site
                         if row.get("site"):
-                            st.caption(f"🌐 {row['site']}")
+                            st.markdown(f"🌐 [{row['site']}]({row['site']})")
+                        else:
+                            st.caption("🌐 Sem site")
+                        
+                        # Redes sociais
+                        redes = []
+                        if row.get("facebook"):
+                            redes.append("Facebook")
+                        if row.get("instagram"):
+                            redes.append("Instagram")
+                        if redes:
+                            st.caption(f"📱 {', '.join(redes)}")
                     
-                    # Score e ações
-                    with col3:
+                    # === COLUNA 2: PRIORIDADE E OPORTUNIDADES ===
+                    with col2:
                         st.markdown(f"## {row['prioridade']}")
-                        st.metric("Score", f"{row['score']}/100")
+                        st.metric("Score de Oportunidade", f"{row['score']}/100")
                         
                         st.markdown("**Vender:**")
-                        for sug in row["sugestoes"][:3]:
+                        for sug in row["sugestoes"][:4]:
                             st.caption(f"• {sug}")
                     
-                    # Ações inferiores
-                    col_a, col_b, col_c = st.columns([1, 2, 1])
-                    
-                    with col_a:
+                    # === COLUNA 3: AÇÕES ===
+                    with col3:
+                        # Checkbox
                         sel = st.checkbox("📌 Selecionar", key=f"sel_{lead_key}")
                         if sel:
                             st.session_state.selecionados[lead_key] = row.to_dict()
                         else:
                             st.session_state.selecionados.pop(lead_key, None)
-                    
-                    with col_b:
+                        
+                        # WhatsApp
                         msg = gerar_mensagem_whatsapp(row["empresa"], cidade_sel)
                         link = montar_link_whatsapp(row["whatsapp"], msg)
                         st.link_button("📲 Enviar WhatsApp", link, type="primary", use_container_width=True)
+                        
+                        # Relatório
+                        if st.button("📄 Ver Relatório", key=f"rel_{lead_key}", use_container_width=True):
+                            st.session_state[f"show_rel_{lead_key}"] = not st.session_state.get(f"show_rel_{lead_key}", False)
+                
+                # Relatório expandido
+                if st.session_state.get(f"show_rel_{lead_key}", False):
+                    st.markdown("---")
+                    st.markdown("### 📋 Relatório Completo")
+                    
+                    col_r1, col_r2 = st.columns(2)
+                    
+                    with col_r1:
+                        st.markdown("**📞 Contatos:**")
+                        st.text(f"Telefone: {row.get('telefone', 'Não informado')}")
+                        st.text(f"WhatsApp: {row.get('whatsapp', 'Não informado')}")
+                        st.text(f"Email: {row.get('email', 'Não informado')}")
+                        
+                        st.markdown("**🌐 Presença Digital:**")
+                        st.text(f"Site: {row.get('site', 'Não possui')}")
+                        if row.get('facebook'):
+                            st.markdown(f"[Facebook]({row['facebook']})")
+                        if row.get('instagram'):
+                            st.markdown(f"[Instagram]({row['instagram']})")
+                        if not row.get('facebook') and not row.get('instagram'):
+                            st.text("Redes Sociais: Não encontradas")
+                    
+                    with col_r2:
+                        st.markdown("**💰 Oportunidades de Venda:**")
+                        for i, sug in enumerate(row["sugestoes"], 1):
+                            st.text(f"{i}. {sug}")
+                        
+                        st.markdown("**📊 Análise:**")
+                        st.text(f"Prioridade: {row['prioridade']}")
+                        st.text(f"Score: {row['score']}/100")
+                        st.text(f"Categoria: {row.get('categoria', 'N/A')}")
         
         else:
             # MODO LISTA DETALHADA
@@ -503,6 +557,31 @@ with tab_results:
                         msg = gerar_mensagem_whatsapp(row["empresa"], cidade_sel)
                         link = montar_link_whatsapp(row["whatsapp"], msg)
                         st.link_button("📲 WhatsApp", link, use_container_width=True)
+                        
+                        if st.button("📄", key=f"rel_lista_{lead_key}", help="Ver Relatório", use_container_width=True):
+                            st.session_state[f"show_rel_{lead_key}"] = not st.session_state.get(f"show_rel_{lead_key}", False)
+                
+                # Relatório expandido
+                if st.session_state.get(f"show_rel_{lead_key}", False):
+                    st.markdown("---")
+                    
+                    col_r1, col_r2 = st.columns(2)
+                    
+                    with col_r1:
+                        st.markdown("**Contatos:**")
+                        st.caption(f"Tel: {row.get('telefone', 'N/A')} | Email: {row.get('email', 'N/A')}")
+                        
+                        st.markdown("**Digital:**")
+                        st.caption(f"Site: {row.get('site', 'Não possui')}")
+                        if row.get('facebook'):
+                            st.caption(f"[Facebook]({row['facebook']})")
+                        if row.get('instagram'):
+                            st.caption(f"[Instagram]({row['instagram']})")
+                    
+                    with col_r2:
+                        st.markdown("**Oportunidades:**")
+                        for sug in row["sugestoes"]:
+                            st.caption(f"• {sug}")
 
 # TAB SELECIONADOS
 with tab_pipeline:
