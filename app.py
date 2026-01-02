@@ -508,10 +508,11 @@ with tab_results:
                     
                     # Botão WhatsApp
                     link_zap = montar_link_whatsapp(row["whatsapp"], msg_edit)
-                    if link_zap:
-                        st.link_button("📲 WhatsApp", link_zap, type="primary", use_container_width=True)
-                    else:
-                        st.caption("Telefone não disponível")
+                    if not link_zap:
+                        # Se não tiver telefone, abre WhatsApp sem número
+                        link_zap = f"https://wa.me/?text={quote(msg_edit)}"
+                    
+                    st.link_button("📲 WhatsApp", link_zap, type="primary", use_container_width=True)
                     
                     # Relatório completo
                     if st.button("📄 Ver Relatório", key=f"rel_{lead_key}", use_container_width=True):
@@ -565,8 +566,9 @@ with tab_pipeline:
                 with col2:
                     msg = gerar_mensagem_primeiro_contato(lead["empresa"], cidade_sel, lead)
                     link = montar_link_whatsapp(lead["whatsapp"], msg)
-                    if link:
-                        st.link_button("📲 WhatsApp", link, type="primary", use_container_width=True)
+                    if not link:
+                        link = f"https://wa.me/?text={quote(msg)}"
+                    st.link_button("📲 WhatsApp", link, type="primary", use_container_width=True)
         
         # Export
         if st.button("⬇️ Exportar Pipeline (CSV)", use_container_width=True):
